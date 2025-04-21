@@ -1,0 +1,135 @@
+#include <WiFi.h>
+#include <WebServer.h>
+
+// Dane do sieci WiFi
+const char* ssid = "ESP32_S3_AP";
+const char* password = "12345678";
+
+WebServer server(80);
+
+// Stany kolorów i historia
+String colorStates[20];
+String previousColorStates[20];
+unsigned long yellowTimestamps[20];
+
+void initializeStates() {
+  for (int i = 0; i < 20; i++) {
+    colorStates[i] = "red";
+    previousColorStates[i] = "red";
+    yellowTimestamps[i] = 0;
+  }
+}
+
+void handleFirstPage() {
+  String html = "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\">"
+                "<meta name=\"viewport\" content=\"width=device-width, initial-scale=0.7\"><title>Page 1</title></head><body style='background-color: black;'>";
+
+  String lines[] = {
+    "17:35  13/224  Myszków", "17:35  13/358  Żory", "17:40  13/204  Tychy", "17:40  13/227  Dąbrowa Górnicza",
+    "17:45  13/219  Orzesze", "17:45  13/219  Mikolów", "17:50  13/282  Kędzierzyn Koźle", "17:55  13/315  Cieszyn",
+    "18:00  13/652  Rybnik", "18:00  13/279  Będzin", "18:00  13/347  Jastrzębie Zdrój", "18:00  13/234  Tarnowskie Góry",
+    "18:10  13/307  Zawiercie", "18:15  13/300  Pszczyna", "18:15  13/225  Jaworzno", "18:15  13/225  Mysłowice",
+    "18:25  13/259  Racibórz", "18:35  13/325  Ustroń", "Małe Samochody", "KONIEC"
+  };
+
+  for (int i = 0; i < 20; i++) {
+    html += "<h1 style='color:" + colorStates[i] + "' onclick='changeColor(" + String(i + 1) + ")'>" + lines[i] + "</h1>";
+  }
+
+  html += "<a href='/page2'>Przejdź do strony 2</a><br><br>"
+          "<button style='width: 150px; height: 50px; font-size: 20px;' onclick='resetColors()'>Reset</button>&nbsp;&nbsp;&nbsp;&nbsp;"
+          "<button style='width: 150px; height: 50px; font-size: 20px;' onclick='undoChange()'>Cofnij</button>"
+          "<script>"
+          "function changeColor(id) { fetch('/changeColor?id=' + id).then(() => location.reload()); }"
+          "function resetColors() { fetch('/resetColors').then(() => location.reload()); }"
+          "function undoChange() { fetch('/undoChange').then(() => location.reload()); }"
+          "</script></body></html>";
+
+  server.send(200, "text/html", html);
+}
+
+void handleSecondPage() {
+  String html = "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\">"
+                "<meta name=\"viewport\" content=\"width=device-width, initial-scale=0.7\"><title>Page 2</title></head><body>";
+
+  for (int i = 0; i < 20; i++) {
+    html += "<h1 style='color:" + colorStates[i] + "'>Pozycja " + String(i + 1) + "</h1>";
+  }
+
+  html += "<a href='/'>Przejdź do strony 1</a></body></html>";
+  server.send(200, "text/html", html);
+}
+
+void handleChangeColor() {
+  if (server.hasArg("id")) {
+    int id = server.arg("id").toInt() - 1;
+    if (id >= 0 && id < 20) {
+      previousColorStates[id] = colorStates[id];
+      colorStates[id] = "yellow";
+      yellowTimestamps[id] = millis();
+    }
+  }
+  server.send(200, "text/plain", "OK");
+}
+
+void handleResetColors() {
+  for (int i = 0; i < 20; i++) {
+    previousColorStates[i] = colorStates[i];
+    colorStates[i] = "red";
+    yellowTimestamps[i] = 0;
+  }
+  server.send(200, "text/plain", "Reset complete");
+}
+
+void handleUndoChange() {
+  for (int i = 0; i < 20; i++) {
+    String temp = colorStates[i];
+    colorStates[i] = previousColorStates[i];
+    previousColorStates[i] = temp;
+    yellowTimestamps[i] = 0;
+  }
+  server.send(200, "text/plain", "Undo complete");
+}
+
+void handleGetColors() {
+  String response = "";
+  for (int i = 0; i < 20; i++) {
+    response += colorStates[i];
+    if (i < 19) response += ",";
+  }
+  Serial.println("Zwracam kolory: " + response); // Opcjonalnie do debugowania
+  server.send(200, "text/plain", response);
+}
+
+void setup() {
+  Serial.begin(115200);
+  WiFi.softAP(ssid, password);
+  Serial.println("Access Point utworzony!");
+  Serial.print("IP Address: ");
+  Serial.println(WiFi.softAPIP());
+
+  initializeStates();
+
+  server.on("/", handleFirstPage);
+  server.on("/page2", handleSecondPage);
+  server.on("/changeColor", handleChangeColor);
+  server.on("/resetColors", handleResetColors);
+  server.on("/undoChange", handleUndoChange);
+  server.on("/getColors", handleGetColors); // <-- DODANE
+
+  server.begin();
+  Serial.println("Serwer webowy uruchomiony!");
+}
+
+void loop() {
+  server.handleClient();
+
+  unsigned long now = millis();
+  for (int i = 0; i < 20; i++) {
+    if (colorStates[i] == "yellow" && (now - yellowTimestamps[i] >= 120000)) {
+      previousColorStates[i] = colorStates[i];
+      colorStates[i] = "green";
+      yellowTimestamps[i] = 0;
+    }
+  }
+}
