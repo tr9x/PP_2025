@@ -1,0 +1,181 @@
+#include <WiFi.h>
+#include <HTTPClient.h>
+#include <TFT_eSPI.h>
+
+// Dane sieci WiFi hostowanej przez pierwsze ESP32
+const char* ssid = "ESP32_S3_AP";
+const char* password = "12345678";
+const char* serverAddress = "192.168.4.1"; // IP serwera ESP32
+
+// Inicjalizacja wyświetlacza TFT
+TFT_eSPI tft = TFT_eSPI();
+
+// Struktura przechowująca dane o liniach
+struct LineData {
+  String time;
+  String code;
+  String destination;
+  String color;
+};
+
+// Tablica z liniami
+LineData lines[20];
+
+void setup() {
+  // Inicjalizacja komunikacji szeregowej
+  Serial.begin(115200);
+
+  // Inicjalizacja wyświetlacza
+  tft.init();
+  tft.writecommand(TFT_INVON); // Włączenie inwersji wyświetlacza
+  tft.setRotation(1); // Dostosuj orientację do swojego wyświetlacza
+  tft.fillScreen(TFT_BLACK);
+  tft.setTextSize(1);
+
+  // Wiadomość startowa
+  tft.setTextColor(TFT_WHITE);
+  tft.drawString("Laczenie z WiFi...", 10, 10, 2);
+
+  // Łączenie z WiFi serwera
+  WiFi.begin(ssid, password);
+  Serial.print("Laczenie z ");
+  Serial.println(ssid);
+
+  int attempts = 0;
+  while (WiFi.status() != WL_CONNECTED && attempts < 20) {
+    delay(500);
+    Serial.print(".");
+    attempts++;
+  }
+
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println("Polaczono!");
+    tft.fillScreen(TFT_BLACK);
+    tft.drawString("Polaczono z serwerem", 10, 10, 2);
+    tft.drawString("IP: " + WiFi.localIP().toString(), 10, 40, 2);
+    delay(2000);
+
+    // Inicjalizacja danych linii
+    initLineData();
+  } else {
+    Serial.println("Nie udalo sie polaczyc!");
+    tft.fillScreen(TFT_BLACK);
+    tft.setTextColor(TFT_RED);
+    tft.drawString("Blad polaczenia WiFi!", 10, 10, 2);
+  }
+}
+
+void loop() {
+  if (WiFi.status() == WL_CONNECTED) {
+    // Pobierz dane kolorów z serwera
+    fetchColorData();
+
+    // Wyświetl dane na ekranie
+    displayData();
+
+    // Odczekaj przed następnym odświeżeniem
+    delay(10000);
+  } else {
+    // Próba ponownego połączenia
+    WiFi.begin(ssid, password);
+    delay(5000);
+  }
+}
+
+void initLineData() {
+  // Inicjalizacja danych linii (czasy, kody, cele)
+  lines[0] = {"17:35", "13/224", "Myszkow", "red"};
+  lines[1] = {"17:35", "13/358", "Zory", "red"};
+  lines[2] = {"17:40", "13/204", "Tychy", "red"};
+  lines[3] = {"17:40", "13/227", "Dabrowa Gornicza", "red"};
+  lines[4] = {"17:45", "13/219", "Orzesze", "red"};
+  lines[5] = {"17:45", "13/219", "Mikolow", "red"};
+  lines[6] = {"17:50", "13/282", "Kedzierzyn Kozle", "red"};
+  lines[7] = {"17:55", "13/315", "Cieszyn", "red"};
+  lines[8] = {"18:00", "13/652", "Rybnik", "red"};
+  lines[9] = {"18:00", "13/279", "Bedzin", "red"};
+  lines[10] = {"18:00", "13/347", "Jastrzebie Zdroj", "red"};
+  lines[11] = {"18:00", "13/234", "Tarnowskie Gory", "red"};
+  lines[12] = {"18:10", "13/307", "Zawiercie", "red"};
+  lines[13] = {"18:15", "13/300", "Pszczyna", "red"};
+  lines[14] = {"18:15", "13/225", "Jaworzno", "red"};
+  lines[15] = {"18:15", "13/225", "Myslowice", "red"};
+  lines[16] = {"18:25", "13/259", "Raciborz", "red"};
+  lines[17] = {"18:35", "13/325", "Ustron", "red"};
+  lines[18] = {"", "", "Male Samochody", "red"};
+  lines[19] = {"", "", "KONIEC", "red"};
+}
+
+void fetchColorData() {
+  HTTPClient http;
+  String url = "http://" + String(serverAddress) + "/getColors";
+
+  http.begin(url);
+  int httpCode = http.GET();
+
+  if (httpCode == HTTP_CODE_OK) {
+    String payload = http.getString();
+    Serial.println("Otrzymane kolory: " + payload);
+
+    // Parsowanie danych CSV
+    int index = 0;
+    int pos = 0;
+    String token;
+
+    while ((pos = payload.indexOf(',')) != -1 && index < 20) {
+      token = payload.substring(0, pos);
+      lines[index].color = token;
+      payload.remove(0, pos + 1);
+      index++;
+    }
+
+    // Ostatni token
+    if (index < 20) {
+      lines[index].color = payload;
+    }
+  } else {
+    Serial.print("Blad pobierania danych: ");
+    Serial.println(httpCode);
+  }
+
+  http.end();
+}
+
+void displayData() {
+  tft.fillScreen(TFT_BLACK);
+
+  // Nagłówek
+  tft.setTextColor(TFT_WHITE);
+  tft.drawString("Przyjazdy v1.1:", 10, 5, 2);
+
+  int yPos = 20;
+  int lineHeight = 15; // Wysokość linii
+  int maxLines = (tft.height() - 31) / lineHeight; // Maksymalna liczba linii do wyświetlenia
+
+  // Wyświetlanie danych
+  for (int i = 0; i < 20 && i < maxLines; i++) {
+    uint16_t textColor;
+    if (lines[i].color == "red") {
+  textColor = TFT_RED;
+    } else if (lines[i].color == "yellow") {
+  textColor = TFT_YELLOW;
+    } else if (lines[i].color == "green") {
+  textColor = TFT_GREEN;
+    } else {
+  textColor = TFT_WHITE; // domyślnie, jeśli kolor nieznany
+    }
+    tft.setTextColor(textColor);
+
+    // Dla uproszczenia wyświetlania, łączymy czas i kod w jedną linię
+    String displayText = lines[i].time;
+    if (lines[i].code != "") {
+      displayText += "  " + lines[i].code;
+    }
+    if (lines[i].destination != "") {
+      displayText += "  " + lines[i].destination;
+    }
+
+    tft.drawString(displayText, 10, yPos, 2);
+    yPos += lineHeight;
+  }
+}
