@@ -1,0 +1,533 @@
+#include <WiFi.h>
+#include <WebServer.h>
+
+// Nazwa i hasło sieci WiFi utworzonej przez ESP32
+const char* ssid = "ESP32_S3_AP";
+const char* password = "12345678";
+
+// Tworzenie serwera webowego
+WebServer server(80);
+
+// Zmienna przechowująca stan koloru
+String colorState1 = "red";
+String colorState2 = "red";
+String colorState3 = "red";
+String colorState4 = "red";
+String colorState5 = "red";
+String colorState6 = "red";
+String colorState7 = "red";
+String colorState8 = "red";
+String colorState9 = "red";
+String colorState10 = "red";
+String colorState11 = "red";
+String colorState12 = "red";
+String colorState13 = "red";
+String colorState14 = "red";
+String colorState15 = "red";
+String colorState16 = "red";
+String colorState17 = "red";
+String colorState18 = "red";
+String colorState19 = "red";
+String colorState20 = "red";
+// Historia zmian kolorów
+String previousColorState1 = "red";
+String previousColorState2 = "red";
+String previousColorState3 = "red";
+String previousColorState4 = "red";
+String previousColorState5 = "red";
+String previousColorState6 = "red";
+String previousColorState7 = "red";
+String previousColorState8 = "red";
+String previousColorState9 = "red";
+String previousColorState10 = "red";
+String previousColorState11 = "red";
+String previousColorState12 = "red";
+String previousColorState13 = "red";
+String previousColorState14 = "red";
+String previousColorState15 = "red";
+String previousColorState16 = "red";
+String previousColorState17 = "red";
+String previousColorState18 = "red";
+String previousColorState19 = "red";
+String previousColorState20 = "red";
+
+// Funkcja do obsługi pierwszej strony
+void handleFirstPage() {
+  String html = "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=0.7\"><title>Page 1</title></head><body>"
+                "<body style='background-color: black;'>"
+                "<h1 style='color:" + colorState1 + "' onclick='changeColor(1)'>17:35  13/224  Myszków</h1>"
+                "<h1 style='color:" + colorState2 + "' onclick='changeColor(2)'>17:35  13/358  Żory</h1>"
+                "<h1 style='color:" + colorState3 + "' onclick='changeColor(3)'>17:40  13/204  Tychy</h1>"
+                "<h1 style='color:" + colorState4 + "' onclick='changeColor(4)'>17:40  13/227  Dąbrowa Górnicza</h1>"
+                "<h1 style='color:" + colorState5 + "' onclick='changeColor(5)'>17:45  13/219  Orzesze</h1>"
+                "<h1 style='color:" + colorState6 + "' onclick='changeColor(6)'>17:45  13/219  Mikolów</h1>"
+                "<h1 style='color:" + colorState7 + "' onclick='changeColor(7)'>17:50  13/282  Kędzierzyn Koźle</h1>"
+                "<h1 style='color:" + colorState8 + "' onclick='changeColor(8)'>17:55  13/315  Cieszyn</h1>"
+                "<h1 style='color:" + colorState9 + "' onclick='changeColor(9)'>18:00  13/652  Rybnik</h1>"
+                "<h1 style='color:" + colorState10 + "' onclick='changeColor(10)'>18:00  13/279  Będzin</h1>"
+                "<h1 style='color:" + colorState11 + "' onclick='changeColor(11)'>18:00  13/347  Jastrzębie Zdrój</h1>"
+                "<h1 style='color:" + colorState12 + "' onclick='changeColor(12)'>18:00  13/234  Tarnowskie Góry</h1>"
+                "<h1 style='color:" + colorState13 + "' onclick='changeColor(13)'>18:10  13/307  Zawiercie</h1>"
+                "<h1 style='color:" + colorState14 + "' onclick='changeColor(14)'>18:15  13/300  Pszczyna</h1>"
+                "<h1 style='color:" + colorState15 + "' onclick='changeColor(15)'>18:15  13/225  Jaworzno</h1>"
+                "<h1 style='color:" + colorState16 + "' onclick='changeColor(16)'>18:15  13/225  Mysłowice</h1>"
+                "<h1 style='color:" + colorState17 + "' onclick='changeColor(17)'>18:25  13/259  Racibórz</h1>"
+                "<h1 style='color:" + colorState18 + "' onclick='changeColor(18)'>18:35  13/325  Ustroń</h1>"
+                "<h1 style='color:" + colorState19 + "' onclick='changeColor(19)'>Małe Samochody</h1>"
+                "<h1 style='color:" + colorState20 + "' onclick='changeColor(20)'>KONIEC</h1>"
+                "<a href='/page2'>Przejdź do strony 2</a><br><br>"
+                "<button style='width: 150px; height: 50px; font-size: 20px;' onclick='resetColors()'>Reset</button>&nbsp;&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp;"
+                "<button style='width: 150px; height: 50px; font-size: 20px;' onclick='undoChange()'>Cofnij</button>"
+                "<script>"
+                "function changeColor(id) { fetch('/changeColor?id=' + id).then(() => location.reload()); }"
+                "function resetColors() { fetch('/resetColors').then(() => location.reload()); }"
+                "function undoChange() { fetch('/undoChange').then(() => location.reload()); }"
+                "</script>"
+                "</body></html>";
+  server.send(200, "text/html", html);
+}
+
+// Funkcja do obsługi drugiej strony
+void handleSecondPage() {
+  String progress = "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=0.5\"><title>Page 2</title></head><body>"
+                   "<h1>Przyjazdy:</h1>"
+                   "<h1 style='color:" + colorState1 + "'>17:35  13/224  Myszków</h1>"
+                   "<h1 style='color:" + colorState2 + "'>17:35  13/358  Żory</h1>"
+                   "<h1 style='color:" + colorState3 + "'>17:40  13/204  Tychy</h1>"
+                   "<h1 style='color:" + colorState4 + "'>17:40  13/227  Dąbrowa Górnicza</h1>"
+                   "<h1 style='color:" + colorState5 + "'>17:45  13/219  Orzesze</h1>"
+                   "<h1 style='color:" + colorState6 + "'>17:45  13/219  Mikolów</h1>"
+                   "<h1 style='color:" + colorState7 + "'>17:50  13/282  Kędzierzyn Koźle</h1>"
+                   "<h1 style='color:" + colorState8 + "'>17:55  13/315  Cieszyn</h1>"
+                   "<h1 style='color:" + colorState9 + "'>18:00  13/652  Rybnik</h1>"
+                   "<h1 style='color:" + colorState10 + "'>18:00  13/279  Będzin</h1>"
+                   "<h1 style='color:" + colorState11 + "'>18:00  13/347  Jastrzębie Zdrój</h1>"
+                   "<h1 style='color:" + colorState12 + "'>18:00  13/234  Tarnowskie Góry</h1>"
+                   "<h1 style='color:" + colorState13 + "'>18:10  13/307  Zawiercie</h1>"
+                   "<h1 style='color:" + colorState14 + "'>18:15  13/300  Pszczyna</h1>"
+                   "<h1 style='color:" + colorState15 + "'>18:15  13/225  Jaworzno</h1>"
+                   "<h1 style='color:" + colorState16 + "'>18:15  13/225  Mysłowice</h1>"
+                   "<h1 style='color:" + colorState17 + "'>18:25  13/259  Racibórz</h1>"
+                   "<h1 style='color:" + colorState18 + "'>18:35  13/325  Ustroń</h1>"
+                   "<h1 style='color:" + colorState19 + "'>Małe Samochody</h1>"
+                   "<h1 style='color:" + colorState20 + "'>KONIEC</h1>"
+                   "<a href='/'>Przejdź do strony 1</a>"
+                   "</body></html>";
+  server.send(200, "text/html", progress);
+}
+
+// Funkcja zmieniająca kolor napisów
+void handleChangeColor() {
+  if (server.hasArg("id")) {
+    String id = server.arg("id");
+    previousColorState1 = colorState1;
+    previousColorState2 = colorState2;
+    if (id == "1") {
+      colorState1 = (colorState1 == "red") ? "green" : "red";
+    } else if (id == "2") {
+      colorState2 = (colorState2 == "red") ? "green" : "red";
+    } else if (id == "3") {
+      colorState3 = (colorState3 == "red") ? "green" : "red";
+    } else if (id == "4") {
+      colorState4 = (colorState4 == "red") ? "green" : "red";
+    } else if (id == "5") {
+      colorState5 = (colorState5 == "red") ? "green" : "red";
+    } else if (id == "6") {
+      colorState6 = (colorState6 == "red") ? "green" : "red";
+    } else if (id == "7") {
+      colorState7 = (colorState7 == "red") ? "green" : "red";
+    } else if (id == "8") {
+      colorState8 = (colorState8 == "red") ? "green" : "red";
+    } else if (id == "9") {
+      colorState9 = (colorState9 == "red") ? "green" : "red";
+    } else if (id == "10") {
+      colorState10 = (colorState10 == "red") ? "green" : "red";
+    } else if (id == "11") {
+      colorState11 = (colorState11 == "red") ? "green" : "red";
+    } else if (id == "12") {
+      colorState12 = (colorState12 == "red") ? "green" : "red";
+    } else if (id == "13") {
+      colorState13 = (colorState13 == "red") ? "green" : "red";
+    } else if (id == "14") {
+      colorState14 = (colorState14 == "red") ? "green" : "red";
+    } else if (id == "15") {
+      colorState15 = (colorState15 == "red") ? "green" : "red";
+    } else if (id == "16") {
+      colorState16 = (colorState16 == "red") ? "green" : "red";
+    } else if (id == "17") {
+      colorState17 = (colorState17 == "red") ? "green" : "red";
+    } else if (id == "18") {
+      colorState18 = (colorState18 == "red") ? "green" : "red";
+    } else if (id == "19") {
+      colorState19 = (colorState19 == "red") ? "green" : "red";
+    } else if (id == "20") {
+      colorState20 = (colorState20 == "red") ? "green" : "red";
+    }
+  }
+  server.send(200, "text/plain", "OK");
+}
+
+// Funkcja resetująca kolory
+void handleResetColors() {
+  previousColorState1 = colorState1;
+  previousColorState2 = colorState2;
+  previousColorState3 = colorState3;
+  previousColorState4 = colorState4;
+  previousColorState5 = colorState5;
+  previousColorState6 = colorState6;
+  previousColorState7 = colorState7;
+  previousColorState8 = colorState8;
+  previousColorState9 = colorState9;
+  previousColorState10 = colorState10;
+  previousColorState11 = colorState11;
+  previousColorState12 = colorState12;
+  previousColorState13 = colorState13;
+  previousColorState14 = colorState14;
+  previousColorState15 = colorState15;
+  previousColorState16 = colorState16;
+  previousColorState17 = colorState17;
+  previousColorState18 = colorState18;
+  previousColorState19 = colorState19;
+  previousColorState20 = colorState20;
+  colorState1 = "red";
+  colorState2 = "red";
+  colorState3 = "red";
+  colorState4 = "red";
+  colorState5 = "red";
+  colorState6 = "red";
+  colorState7 = "red";
+  colorState8 = "red";
+  colorState9 = "red";
+  colorState10 = "red";
+  colorState11 = "red";
+  colorState12 = "red";
+  colorState13 = "red";
+  colorState14 = "red";
+  colorState15 = "red";
+  colorState16 = "red";
+  colorState17 = "red";
+  colorState18 = "red";
+  colorState19 = "red";
+  colorState20 = "red";
+  server.send(200, "text/plain", "Reset complete");
+}
+
+// Funkcja cofająca zmianę
+void handleUndoChange() {
+  String tempColor1 = colorState1;
+  String tempColor2 = colorState2;
+  String tempColor3 = colorState3;
+  String tempColor4 = colorState4;
+  String tempColor5 = colorState5;
+  String tempColor6 = colorState6;
+  String tempColor7 = colorState7;
+  String tempColor8 = colorState8;
+  String tempColor9 = colorState9;
+  String tempColor10 = colorState10;
+  String tempColor11 = colorState11;
+  String tempColor12 = colorState12;
+  String tempColor13 = colorState13;
+  String tempColor14 = colorState14;
+  String tempColor15 = colorState15;
+  String tempColor16 = colorState16;
+  String tempColor17 = colorState17;
+  String tempColor18 = colorState18;
+  String tempColor19 = colorState19;
+  String tempColor20 = colorState20;
+  colorState1 = previousColorState1;
+  colorState2 = previousColorState2;
+  colorState3 = previousColorState3;
+  colorState4 = previousColorState4;
+  colorState5 = previousColorState5;
+  colorState6 = previousColorState6;
+  colorState7 = previousColorState7;
+  colorState8 = previousColorState8;
+  colorState9 = previousColorState9;
+  colorState10 = previousColorState10;
+  colorState11 = previousColorState11;
+  colorState12 = previousColorState12;
+  colorState13 = previousColorState13;
+  colorState14 = previousColorState14;
+  colorState15 = previousColorState15;
+  colorState16 = previousColorState16;
+  colorState17 = previousColorState17;
+  colorState18 = previousColorState18;
+  colorState19 = previousColorState19;
+  colorState20 = previousColorState20;
+  previousColorState1 = tempColor1;
+  previousColorState2 = tempColor2;
+  previousColorState3 = tempColor3;
+  previousColorState4 = tempColor4;
+  previousColorState5 = tempColor5;
+  previousColorState6 = tempColor6;
+  previousColorState7 = tempColor7;
+  previousColorState8 = tempColor8;
+  previousColorState9 = tempColor9;
+  previousColorState10 = tempColor10;
+  previousColorState11 = tempColor11;
+  previousColorState12 = tempColor12;
+  previousColorState13 = tempColor13;
+  previousColorState14 = tempColor14;
+  previousColorState15 = tempColor15;
+  previousColorState16 = tempColor16;
+  previousColorState17 = tempColor17;
+  previousColorState18 = tempColor18;
+  previousColorState19 = tempColor19;
+  previousColorState20 = tempColor20;
+  server.send(200, "text/plain", "Undo complete");
+}
+
+void setup() {
+  // Uruchamianie portu szeregowego
+  Serial.begin(115200);
+
+  // Tworzenie sieci WiFi
+  WiFi.softAP(ssid, password);
+  Serial.println("Access Point utworzony!");
+  Serial.print("IP Address: ");
+  Serial.println(WiFi.softAPIP());
+
+  // Konfiguracja tras dla stron
+  server.on("/", handleFirstPage);
+  server.on("/page2", handleSecondPage);
+  server.on("/changeColor", handleChangeColor);
+  server.on("/resetColors", handleResetColors);
+  server.on("/undoChange", handleUndoChange);
+
+  // Start serwera
+  server.begin();
+  Serial.println("Serwer webowy uruchomiony!");
+}
+
+void loop() {
+  // Obsługa żądań HTTP
+  server.handleClient();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+NOWY TESTY
+
+CLIJENT
+
+#include <WiFi.h>
+#include <HTTPClient.h>
+#include <TFT_eSPI.h>
+
+// Dane sieci WiFi hostowanej przez pierwsze ESP32
+const char* ssid = "ESP32_S3_AP";
+const char* password = "12345678";
+const char* serverAddress = "192.168.4.1"; // IP serwera ESP32
+
+// Inicjalizacja wyświetlacza TFT
+TFT_eSPI tft = TFT_eSPI();
+
+// Struktura przechowująca dane o liniach
+struct LineData {
+  String time;
+  String code;
+  String destination;
+  String color;
+};
+
+// Tablica z liniami
+LineData lines[20];
+
+void setup() {
+  // Inicjalizacja komunikacji szeregowej
+  Serial.begin(115200);
+  
+  // Inicjalizacja wyświetlacza
+  tft.init();
+  tft.setRotation(1); // Dostosuj orientację do swojego wyświetlacza
+  tft.fillScreen(TFT_BLACK);
+  tft.setTextSize(1);
+  
+  // Wiadomość startowa
+  tft.setTextColor(TFT_WHITE);
+  tft.drawString("Laczenie z WiFi...", 10, 10, 2);
+  
+  // Łączenie z WiFi serwera
+  WiFi.begin(ssid, password);
+  Serial.print("Laczenie z ");
+  Serial.println(ssid);
+  
+  int attempts = 0;
+  while (WiFi.status() != WL_CONNECTED && attempts < 20) {
+    delay(500);
+    Serial.print(".");
+    attempts++;
+  }
+  
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println("Polaczono!");
+    tft.fillScreen(TFT_BLACK);
+    tft.drawString("Polaczono z serwerem", 10, 10, 2);
+    tft.drawString("IP: " + WiFi.localIP().toString(), 10, 40, 2);
+    delay(2000);
+    
+    // Inicjalizacja danych linii
+    initLineData();
+  } else {
+    Serial.println("Nie udalo sie polaczyc!");
+    tft.fillScreen(TFT_BLACK);
+    tft.setTextColor(TFT_RED);
+    tft.drawString("Blad polaczenia WiFi!", 10, 10, 2);
+  }
+}
+
+void loop() {
+  if (WiFi.status() == WL_CONNECTED) {
+    // Pobierz dane kolorów z serwera
+    fetchColorData();
+    
+    // Wyświetl dane na ekranie
+    displayData();
+    
+    // Odczekaj przed następnym odświeżeniem
+    delay(1000);
+  } else {
+    // Próba ponownego połączenia
+    WiFi.begin(ssid, password);
+    delay(5000);
+  }
+}
+
+void initLineData() {
+  // Inicjalizacja danych linii (czasy, kody, cele)
+  lines[0] = {"17:35", "13/224", "Myszkow", "red"};
+  lines[1] = {"17:35", "13/358", "Zory", "red"};
+  lines[2] = {"17:40", "13/204", "Tychy", "red"};
+  lines[3] = {"17:40", "13/227", "Dabrowa Gornicza", "red"};
+  lines[4] = {"17:45", "13/219", "Orzesze", "red"};
+  lines[5] = {"17:45", "13/219", "Mikolow", "red"};
+  lines[6] = {"17:50", "13/282", "Kedzierzyn Kozle", "red"};
+  lines[7] = {"17:55", "13/315", "Cieszyn", "red"};
+  lines[8] = {"18:00", "13/652", "Rybnik", "red"};
+  lines[9] = {"18:00", "13/279", "Bedzin", "red"};
+  lines[10] = {"18:00", "13/347", "Jastrzebie Zdroj", "red"};
+  lines[11] = {"18:00", "13/234", "Tarnowskie Gory", "red"};
+  lines[12] = {"18:10", "13/307", "Zawiercie", "red"};
+  lines[13] = {"18:15", "13/300", "Pszczyna", "red"};
+  lines[14] = {"18:15", "13/225", "Jaworzno", "red"};
+  lines[15] = {"18:15", "13/225", "Myslowice", "red"};
+  lines[16] = {"18:25", "13/259", "Raciborz", "red"};
+  lines[17] = {"18:35", "13/325", "Ustron", "red"};
+  lines[18] = {"", "", "Male Samochody", "red"};
+  lines[19] = {"", "", "KONIEC", "red"};
+}
+
+void fetchColorData() {
+  HTTPClient http;
+  String url = "http://" + String(serverAddress) + "/getColors";
+  
+  http.begin(url);
+  int httpCode = http.GET();
+  
+  if (httpCode == HTTP_CODE_OK) {
+    String payload = http.getString();
+    Serial.println("Otrzymane kolory: " + payload);
+    
+    // Parsowanie danych CSV
+    int index = 0;
+    int pos = 0;
+    String token;
+    
+    while ((pos = payload.indexOf(',')) != -1 && index < 20) {
+      token = payload.substring(0, pos);
+      lines[index].color = token;
+      payload.remove(0, pos + 1);
+      index++;
+    }
+    
+    // Ostatni token
+    if (index < 20) {
+      lines[index].color = payload;
+    }
+  } else {
+    Serial.print("Blad pobierania danych: ");
+    Serial.println(httpCode);
+  }
+  
+  http.end();
+}
+
+void displayData() {
+  tft.fillScreen(TFT_BLACK);
+  
+  // Nagłówek
+  tft.setTextColor(TFT_WHITE);
+  tft.drawString("Przyjazdy:", 10, 5, 2);
+  
+  int yPos = 30;
+  int lineHeight = 15; // Wysokość linii
+  int maxLines = (tft.height() - 30) / lineHeight; // Maksymalna liczba linii do wyświetlenia
+  
+  // Wyświetlanie danych
+  for (int i = 0; i < 20 && i < maxLines; i++) {
+    uint16_t textColor = (lines[i].color == "red") ? TFT_RED : TFT_GREEN;
+    tft.setTextColor(textColor);
+    
+    // Dla uproszczenia wyświetlania, łączymy czas i kod w jedną linię
+    String displayText = lines[i].time;
+    if (lines[i].code != "") {
+      displayText += "  " + lines[i].code;
+    }
+    if (lines[i].destination != "") {
+      displayText += "  " + lines[i].destination;
+    }
+    
+    tft.drawString(displayText, 10, yPos, 2);
+    yPos += lineHeight;
+  }
+}
+
+
+
+
+
+
+SERVER
+
+// Dodaj tę funkcję do kodu serwera:
+
+// Funkcja zwracająca kolory w formacie CSV
+void handleGetColors() {
+  String colorsCSV = colorState1 + "," + 
+                    colorState2 + "," + 
+                    colorState3 + "," + 
+                    colorState4 + "," + 
+                    colorState5 + "," + 
+                    colorState6 + "," + 
+                    colorState7 + "," + 
+                    colorState8 + "," + 
+                    colorState9 + "," + 
+                    colorState10 + "," + 
+                    colorState11 + "," + 
+                    colorState12 + "," + 
+                    colorState13 + "," + 
+                    colorState14 + "," + 
+                    colorState15 + "," + 
+                    colorState16 + "," + 
+                    colorState17 + "," + 
+                    colorState18 + "," + 
+                    colorState19 + "," + 
+                    colorState20;
+  server.send(200, "text/plain", colorsCSV);
+}
+
+// Dodaj tę linię w funkcji setup() serwera:
+server.on("/getColors", handleGetColors);
